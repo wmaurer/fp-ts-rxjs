@@ -1,22 +1,23 @@
 /**
  * @since 0.6.8
  */
-import { Alt2 } from 'fp-ts/lib/Alt'
-import { Applicative2 } from 'fp-ts/lib/Applicative'
-import { Apply2 } from 'fp-ts/lib/Apply'
-import { Bifunctor2 } from 'fp-ts/lib/Bifunctor'
-import * as E from 'fp-ts/lib/Either'
-import { flow, identity, Predicate, Refinement } from 'fp-ts/lib/function'
-import { Functor2 } from 'fp-ts/lib/Functor'
-import { IO } from 'fp-ts/lib/IO'
-import { IOEither } from 'fp-ts/lib/IOEither'
-import { Monad2 } from 'fp-ts/lib/Monad'
-import { MonadIO2 } from 'fp-ts/lib/MonadIO'
-import { MonadTask2 } from 'fp-ts/lib/MonadTask'
-import { MonadThrow2 } from 'fp-ts/lib/MonadThrow'
-import { Option } from 'fp-ts/lib/Option'
-import { pipe } from 'fp-ts/lib/pipeable'
-import * as TE from 'fp-ts/lib/TaskEither'
+import { Alt2 } from 'fp-ts/Alt'
+import { Applicative2 } from 'fp-ts/Applicative'
+import { Apply2 } from 'fp-ts/Apply'
+import { Bifunctor2 } from 'fp-ts/Bifunctor'
+import * as E from 'fp-ts/Either'
+import { flow, identity, pipe } from 'fp-ts/function'
+import { Functor2 } from 'fp-ts/Functor'
+import { IO } from 'fp-ts/IO'
+import { IOEither } from 'fp-ts/IOEither'
+import { Monad2 } from 'fp-ts/Monad'
+import { MonadIO2 } from 'fp-ts/MonadIO'
+import { MonadTask2 } from 'fp-ts/MonadTask'
+import { MonadThrow2 } from 'fp-ts/MonadThrow'
+import * as O from 'fp-ts/Option'
+import { Predicate } from 'fp-ts/Predicate'
+import { Refinement } from 'fp-ts/Refinement'
+import * as TE from 'fp-ts/TaskEither'
 import { Observable } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 import { MonadObservable2 } from './MonadObservable'
@@ -143,8 +144,10 @@ export const fold: <E, A, B>(
  * @category destructors
  * @since 0.6.8
  */
-export const getOrElse = <E, A>(onLeft: (e: E) => Observable<A>) => (ma: ObservableEither<E, A>): Observable<A> =>
-  pipe(ma, R.chain(E.fold(onLeft, R.of)))
+export const getOrElse =
+  <E, A>(onLeft: (e: E) => Observable<A>) =>
+  (ma: ObservableEither<E, A>): Observable<A> =>
+    pipe(ma, R.chain(E.fold(onLeft, R.of)))
 
 // -------------------------------------------------------------------------------------
 // combinators
@@ -156,7 +159,7 @@ export const getOrElse = <E, A>(onLeft: (e: E) => Observable<A>) => (ma: Observa
  */
 export const orElse: <E, A, M>(
   onLeft: (e: E) => ObservableEither<M, A>
-) => (ma: ObservableEither<E, A>) => ObservableEither<M, A> = f => R.chain(E.fold(f, right))
+) => (ma: ObservableEither<E, A>) => ObservableEither<M, A> = (f) => R.chain(E.fold(f, right))
 
 /**
  * @category combinators
@@ -177,7 +180,7 @@ export const swap: <E, A>(ma: ObservableEither<E, A>) => ObservableEither<A, E> 
  * @category Functor
  * @since 0.6.8
  */
-export const map: <A, B>(f: (a: A) => B) => <E>(fa: ObservableEither<E, A>) => ObservableEither<E, B> = f =>
+export const map: <A, B>(f: (a: A) => B) => <E>(fa: ObservableEither<E, A>) => ObservableEither<E, B> = (f) =>
   R.map(E.map(f))
 
 /**
@@ -190,7 +193,7 @@ export const ap = <E, A>(
   fa: ObservableEither<E, A>
 ): (<B>(fab: ObservableEither<E, (a: A) => B>) => ObservableEither<E, B>) =>
   flow(
-    R.map(gab => (ga: E.Either<E, A>) => E.ap(ga)(gab)),
+    R.map((gab) => (ga: E.Either<E, A>) => E.ap(ga)(gab)),
     R.ap(fa)
   )
 
@@ -204,9 +207,9 @@ export const ap = <E, A>(
  */
 export const apFirst: <E, B>(
   fb: ObservableEither<E, B>
-) => <A>(fa: ObservableEither<E, A>) => ObservableEither<E, A> = fb =>
+) => <A>(fa: ObservableEither<E, A>) => ObservableEither<E, A> = (fb) =>
   flow(
-    map(a => () => a),
+    map((a) => () => a),
     ap(fb)
   )
 
@@ -252,7 +255,7 @@ export const bimap: <E, G, A, B>(
  * @category Bifunctor
  * @since 0.6.8
  */
-export const mapLeft: <E, G>(f: (e: E) => G) => <A>(fa: ObservableEither<E, A>) => ObservableEither<G, A> = f =>
+export const mapLeft: <E, G>(f: (e: E) => G) => <A>(fa: ObservableEither<E, A>) => ObservableEither<G, A> = (f) =>
   R.map(E.mapLeft(f))
 
 /**
@@ -261,9 +264,10 @@ export const mapLeft: <E, G>(f: (e: E) => G) => <A>(fa: ObservableEither<E, A>) 
  * @category Monad
  * @since 0.6.12
  */
-export const chainW = <A, E2, B>(f: (a: A) => ObservableEither<E2, B>) => <E1>(
-  ma: ObservableEither<E1, A>
-): ObservableEither<E1 | E2, B> => pipe(ma, R.chain(E.fold(a => left<E1 | E2, B>(a), f)))
+export const chainW =
+  <A, E2, B>(f: (a: A) => ObservableEither<E2, B>) =>
+  <E1>(ma: ObservableEither<E1, A>): ObservableEither<E1 | E2, B> =>
+    pipe(ma, R.chain(E.fold((a) => left<E1 | E2, B>(a), f)))
 
 /**
  * @category Monad
@@ -294,8 +298,8 @@ export const flatten: <E, A>(mma: ObservableEither<E, ObservableEither<E, A>>) =
  */
 export const chainFirst: <E, A, B>(
   f: (a: A) => ObservableEither<E, B>
-) => (ma: ObservableEither<E, A>) => ObservableEither<E, A> = f =>
-  chain(a =>
+) => (ma: ObservableEither<E, A>) => ObservableEither<E, A> = (f) =>
+  chain((a) =>
     pipe(
       f(a),
       map(() => a)
@@ -318,14 +322,14 @@ export const filterOrElse: {
   ) => ObservableEither<E, B>
   <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): (ma: ObservableEither<E, A>) => ObservableEither<E, A>
 } = <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): ((ma: ObservableEither<E, A>) => ObservableEither<E, A>) =>
-  chain(a => (predicate(a) ? of(a) : throwError(onFalse(a))))
+  chain((a) => (predicate(a) ? of(a) : throwError(onFalse(a))))
 
 /**
  * Derivable from `MonadThrow`.
  *
  * @since 0.6.10
  */
-export const fromEither: <E, A>(ma: E.Either<E, A>) => ObservableEither<E, A> = ma =>
+export const fromEither: <E, A>(ma: E.Either<E, A>) => ObservableEither<E, A> = (ma) =>
   ma._tag === 'Left' ? throwError(ma.left) : of(ma.right)
 
 /**
@@ -333,8 +337,10 @@ export const fromEither: <E, A>(ma: E.Either<E, A>) => ObservableEither<E, A> = 
  *
  * @since 0.6.10
  */
-export const fromOption = <E>(onNone: () => E) => <A>(ma: Option<A>): ObservableEither<E, A> =>
-  ma._tag === 'None' ? throwError(onNone()) : of(ma.value)
+export const fromOption =
+  <E>(onNone: () => E) =>
+  <A>(ma: O.Option<A>): ObservableEither<E, A> =>
+    ma._tag === 'None' ? throwError(onNone()) : of(ma.value)
 
 /**
  * Derivable from `MonadThrow`.
@@ -344,8 +350,10 @@ export const fromOption = <E>(onNone: () => E) => <A>(ma: Option<A>): Observable
 export const fromPredicate: {
   <E, A, B extends A>(refinement: Refinement<A, B>, onFalse: (a: A) => E): (a: A) => ObservableEither<E, B>
   <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): (a: A) => ObservableEither<E, A>
-} = <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E) => (a: A): ObservableEither<E, A> =>
-  predicate(a) ? of(a) : throwError(onFalse(a))
+} =
+  <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E) =>
+  (a: A): ObservableEither<E, A> =>
+    predicate(a) ? of(a) : throwError(onFalse(a))
 
 /**
  * @category MonadThrow
@@ -542,7 +550,7 @@ export const Do: ObservableEither<never, {}> =
 export const bindTo = <K extends string, E, A>(
   name: K
 ): ((fa: ObservableEither<E, A>) => ObservableEither<E, { [P in K]: A }>) =>
-  map(a => ({ [name]: a } as { [P in K]: A }))
+  map((a) => ({ [name]: a } as { [P in K]: A }))
 
 /**
  * @since 0.6.11
@@ -551,10 +559,10 @@ export const bind = <K extends string, E, A, B>(
   name: Exclude<K, keyof A>,
   f: (a: A) => ObservableEither<E, B>
 ): ((fa: ObservableEither<E, A>) => ObservableEither<E, { [P in keyof A | K]: P extends keyof A ? A[P] : B }>) =>
-  chain(a =>
+  chain((a) =>
     pipe(
       f(a),
-      map(b => ({ ...a, [name]: b } as any))
+      map((b) => ({ ...a, [name]: b } as any))
     )
   )
 

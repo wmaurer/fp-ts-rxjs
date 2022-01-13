@@ -1,0 +1,3 @@
+- upgraded package versions (fp-ts ^2.8, rxjs ^7)
+- changed import paths to fp-ts
+- changed deprecated imports to pipe, Predicate, Refinement, Separated

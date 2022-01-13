@@ -37,14 +37,14 @@
     "rxjs": "^7.0.0"
   },
   "devDependencies": {
-    "@types/node": "^13.11.0",
     "@types/jest": "22.2.2",
+    "@types/node": "^13.11.0",
     "docs-ts": "^0.6.10",
     "fp-ts": "^2.8",
     "jest": "^26.4.2",
     "mocha": "^5.2.0",
     "prettier": "^2.2.1",
-    "rxjs": "^6.5.2",
+    "rxjs": "^7.4.0",
     "ts-jest": "^26.3.0",
     "ts-node": "^8.0.2",
     "tslint": "5.11.0",

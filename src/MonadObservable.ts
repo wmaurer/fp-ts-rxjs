@@ -3,16 +3,8 @@
  *
  * @since 0.6.6
  */
-import { HKT, Kind, Kind2, Kind3, Kind4, URIS, URIS2, URIS3, URIS4 } from 'fp-ts/lib/HKT'
-import {
-  MonadTask,
-  MonadTask1,
-  MonadTask2,
-  MonadTask2C,
-  MonadTask3,
-  MonadTask3C,
-  MonadTask4
-} from 'fp-ts/lib/MonadTask'
+import { HKT, Kind, Kind2, Kind3, Kind4, URIS, URIS2, URIS3, URIS4 } from 'fp-ts/HKT'
+import { MonadTask, MonadTask1, MonadTask2, MonadTask2C, MonadTask3, MonadTask3C, MonadTask4 } from 'fp-ts/MonadTask'
 import { Observable } from 'rxjs'
 
 /**

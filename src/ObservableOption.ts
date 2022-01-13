@@ -1,17 +1,18 @@
 /**
  * @since 0.6.14
  */
-import { Alt1 } from 'fp-ts/lib/Alt'
-import { Applicative1 } from 'fp-ts/lib/Applicative'
-import { Apply1 } from 'fp-ts/lib/Apply'
-import { flow, identity, Predicate, Refinement } from 'fp-ts/lib/function'
-import { Functor1 } from 'fp-ts/lib/Functor'
-import { IO } from 'fp-ts/lib/IO'
-import { Monad1 } from 'fp-ts/lib/Monad'
-import { MonadIO1 } from 'fp-ts/lib/MonadIO'
-import { MonadTask1 } from 'fp-ts/lib/MonadTask'
-import * as O from 'fp-ts/lib/Option'
-import { pipe } from 'fp-ts/lib/pipeable'
+import { Alt1 } from 'fp-ts/Alt'
+import { Applicative1 } from 'fp-ts/Applicative'
+import { Apply1 } from 'fp-ts/Apply'
+import { flow, identity, pipe } from 'fp-ts/function'
+import { Functor1 } from 'fp-ts/Functor'
+import { IO } from 'fp-ts/IO'
+import { Monad1 } from 'fp-ts/Monad'
+import { MonadIO1 } from 'fp-ts/MonadIO'
+import { MonadTask1 } from 'fp-ts/MonadTask'
+import * as O from 'fp-ts/Option'
+import { Predicate } from 'fp-ts/Predicate'
+import { Refinement } from 'fp-ts/Refinement'
 import { Observable } from 'rxjs'
 import { catchError } from 'rxjs/operators'
 import { MonadObservable1 } from './MonadObservable'
@@ -101,8 +102,10 @@ export const fold: <A, B>(
  * @category destructors
  * @since 0.6.14
  */
-export const getOrElse = <A>(onNone: () => Observable<A>) => (ma: ObservableOption<A>): Observable<A> =>
-  pipe(ma, R.chain(O.fold(onNone, R.of)))
+export const getOrElse =
+  <A>(onNone: () => Observable<A>) =>
+  (ma: ObservableOption<A>): Observable<A> =>
+    pipe(ma, R.chain(O.fold(onNone, R.of)))
 
 // -------------------------------------------------------------------------------------
 // combinators
@@ -115,7 +118,7 @@ export const getOrElse = <A>(onNone: () => Observable<A>) => (ma: ObservableOpti
  * @category combinators
  * @since 0.6.14
  */
-export const alt: <A>(onNone: () => ObservableOption<A>) => (ma: ObservableOption<A>) => ObservableOption<A> = f =>
+export const alt: <A>(onNone: () => ObservableOption<A>) => (ma: ObservableOption<A>) => ObservableOption<A> = (f) =>
   R.chain(O.fold(f, some))
 
 // -------------------------------------------------------------------------------------
@@ -129,7 +132,7 @@ export const alt: <A>(onNone: () => ObservableOption<A>) => (ma: ObservableOptio
  * @category Functor
  * @since 0.6.14
  */
-export const map: <A, B>(f: (a: A) => B) => (fa: ObservableOption<A>) => ObservableOption<B> = f => R.map(O.map(f))
+export const map: <A, B>(f: (a: A) => B) => (fa: ObservableOption<A>) => ObservableOption<B> = (f) => R.map(O.map(f))
 
 /**
  * Apply a function to an argument under a type constructor.
@@ -139,7 +142,7 @@ export const map: <A, B>(f: (a: A) => B) => (fa: ObservableOption<A>) => Observa
  */
 export const ap = <A>(fa: ObservableOption<A>): (<B>(fab: ObservableOption<(a: A) => B>) => ObservableOption<B>) =>
   flow(
-    R.map(gab => (ga: O.Option<A>) => O.ap(ga)(gab)),
+    R.map((gab) => (ga: O.Option<A>) => O.ap(ga)(gab)),
     R.ap(fa)
   )
 
@@ -151,9 +154,9 @@ export const ap = <A>(fa: ObservableOption<A>): (<B>(fab: ObservableOption<(a: A
  * @category combinators
  * @since 0.6.14
  */
-export const apFirst: <B>(fb: ObservableOption<B>) => <A>(fa: ObservableOption<A>) => ObservableOption<A> = fb =>
+export const apFirst: <B>(fb: ObservableOption<B>) => <A>(fa: ObservableOption<A>) => ObservableOption<A> = (fb) =>
   flow(
-    map(a => () => a),
+    map((a) => () => a),
     ap(fb)
   )
 
@@ -175,8 +178,10 @@ export const apSecond = <B>(fb: ObservableOption<B>): (<A>(fa: ObservableOption<
  * @category Monad
  * @since 0.6.14
  */
-export const chain = <A, B>(f: (a: A) => ObservableOption<B>) => (ma: ObservableOption<A>): ObservableOption<B> =>
-  pipe(ma, R.chain(O.fold(() => none, f)))
+export const chain =
+  <A, B>(f: (a: A) => ObservableOption<B>) =>
+  (ma: ObservableOption<A>): ObservableOption<B> =>
+    pipe(ma, R.chain(O.fold(() => none, f)))
 
 /**
  * Derivable from `Monad`.
@@ -199,8 +204,8 @@ export const flatten: <A>(mma: ObservableOption<ObservableOption<A>>) => Observa
  */
 export const chainFirst: <A, B>(
   f: (a: A) => ObservableOption<B>
-) => (ma: ObservableOption<A>) => ObservableOption<A> = f =>
-  chain(a =>
+) => (ma: ObservableOption<A>) => ObservableOption<A> = (f) =>
+  chain((a) =>
     pipe(
       f(a),
       map(() => a)
@@ -221,7 +226,7 @@ export const filterOrElse: {
   <A, B extends A>(refinement: Refinement<A, B>): (ma: ObservableOption<A>) => ObservableOption<B>
   <A>(predicate: Predicate<A>): (ma: ObservableOption<A>) => ObservableOption<A>
 } = <A>(predicate: Predicate<A>): ((ma: ObservableOption<A>) => ObservableOption<A>) =>
-  chain(a => (predicate(a) ? of(a) : none))
+  chain((a) => (predicate(a) ? of(a) : none))
 
 /**
  * Derivable from `MonadThrow`.
@@ -238,7 +243,10 @@ export const fromOption = <A>(ma: O.Option<A>): ObservableOption<A> => (ma._tag 
 export const fromPredicate: {
   <A, B extends A>(refinement: Refinement<A, B>): (a: A) => ObservableOption<B>
   <A>(predicate: Predicate<A>): (a: A) => ObservableOption<A>
-} = <A>(predicate: Predicate<A>) => (a: A): ObservableOption<A> => (predicate(a) ? of(a) : none)
+} =
+  <A>(predicate: Predicate<A>) =>
+  (a: A): ObservableOption<A> =>
+    predicate(a) ? of(a) : none
 
 // -------------------------------------------------------------------------------------
 // instances
@@ -381,7 +389,7 @@ export const Do: ObservableOption<{}> =
  */
 export const bindTo = <K extends string, A>(
   name: K
-): ((fa: ObservableOption<A>) => ObservableOption<{ [P in K]: A }>) => map(a => ({ [name]: a } as { [P in K]: A }))
+): ((fa: ObservableOption<A>) => ObservableOption<{ [P in K]: A }>) => map((a) => ({ [name]: a } as { [P in K]: A }))
 
 /**
  * @since 0.6.14
@@ -390,9 +398,9 @@ export const bind = <K extends string, A, B>(
   name: Exclude<K, keyof A>,
   f: (a: A) => ObservableOption<B>
 ): ((fa: ObservableOption<A>) => ObservableOption<{ [P in keyof A | K]: P extends keyof A ? A[P] : B }>) =>
-  chain(a =>
+  chain((a) =>
     pipe(
       f(a),
-      map(b => ({ ...a, [name]: b } as any))
+      map((b) => ({ ...a, [name]: b } as any))
     )
   )

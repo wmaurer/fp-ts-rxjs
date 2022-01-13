@@ -1,24 +1,26 @@
 /**
  * @since 0.6.6
  */
-import { Alt2 } from 'fp-ts/lib/Alt'
-import { Alternative2 } from 'fp-ts/lib/Alternative'
-import { Applicative2 } from 'fp-ts/lib/Applicative'
-import { Apply2 } from 'fp-ts/lib/Apply'
-import { Compactable2, Separated } from 'fp-ts/lib/Compactable'
-import * as E from 'fp-ts/lib/Either'
-import { Filterable2 } from 'fp-ts/lib/Filterable'
-import { flow, identity, Predicate, Refinement } from 'fp-ts/lib/function'
-import { Functor2 } from 'fp-ts/lib/Functor'
-import { IO } from 'fp-ts/lib/IO'
-import { Monad2 } from 'fp-ts/lib/Monad'
-import { MonadIO2 } from 'fp-ts/lib/MonadIO'
-import { MonadTask2 } from 'fp-ts/lib/MonadTask'
-import { Monoid } from 'fp-ts/lib/Monoid'
-import * as O from 'fp-ts/lib/Option'
-import { pipe } from 'fp-ts/lib/pipeable'
-import * as R from 'fp-ts/lib/Reader'
-import { ReaderTask } from 'fp-ts/lib/ReaderTask'
+import { Alt2 } from 'fp-ts/Alt'
+import { Alternative2 } from 'fp-ts/Alternative'
+import { Applicative2, getApplicativeMonoid } from 'fp-ts/Applicative'
+import { Apply2 } from 'fp-ts/Apply'
+import { Compactable2 } from 'fp-ts/Compactable'
+import * as E from 'fp-ts/Either'
+import { Filterable2 } from 'fp-ts/Filterable'
+import { flow, identity, pipe } from 'fp-ts/function'
+import { Functor2 } from 'fp-ts/Functor'
+import { IO } from 'fp-ts/IO'
+import { Monad2 } from 'fp-ts/Monad'
+import { MonadIO2 } from 'fp-ts/MonadIO'
+import { MonadTask2 } from 'fp-ts/MonadTask'
+import { Monoid } from 'fp-ts/Monoid'
+import * as O from 'fp-ts/Option'
+import { Predicate } from 'fp-ts/Predicate'
+import { Refinement } from 'fp-ts/Refinement'
+import * as R from 'fp-ts/Reader'
+import { ReaderTask } from 'fp-ts/ReaderTask'
+import { Separated } from 'fp-ts/Separated'
 import { Observable } from 'rxjs'
 import { MonadObservable2 } from './MonadObservable'
 import * as T from './Observable'
@@ -49,7 +51,7 @@ export const fromObservable: MonadObservable2<URI>['fromObservable'] = R.of
  * @category constructors
  * @since 0.6.6
  */
-export const fromReader: <R, A = never>(ma: R.Reader<R, A>) => ReaderObservable<R, A> = ma => flow(ma, T.of)
+export const fromReader: <R, A = never>(ma: R.Reader<R, A>) => ReaderObservable<R, A> = (ma) => flow(ma, T.of)
 
 /**
  * @category constructors
@@ -89,7 +91,7 @@ export const ask: <R>() => ReaderObservable<R, R> = () => T.of
  * @category constructors
  * @since 0.6.6
  */
-export const asks: <R, A = never>(f: (r: R) => A) => ReaderObservable<R, A> = f => flow(T.of, T.map(f))
+export const asks: <R, A = never>(f: (r: R) => A) => ReaderObservable<R, A> = (f) => flow(T.of, T.map(f))
 
 // -------------------------------------------------------------------------------------
 // combinators
@@ -105,24 +107,26 @@ export const local: <R2, R1>(f: (f: R2) => R1) => <A>(ma: ReaderObservable<R1, A
  * @category combinators
  * @since 0.6.6
  */
-export const fromIOK = <A extends Array<unknown>, B>(
-  f: (...a: A) => IO<B>
-): (<R>(...a: A) => ReaderObservable<R, B>) => (...a) => fromIO(f(...a))
+export const fromIOK =
+  <A extends Array<unknown>, B>(f: (...a: A) => IO<B>): (<R>(...a: A) => ReaderObservable<R, B>) =>
+  (...a) =>
+    fromIO(f(...a))
 
 /**
  * @category combinators
  * @since 0.6.6
  */
 export const chainIOK = <A, B>(f: (a: A) => IO<B>): (<R>(ma: ReaderObservable<R, A>) => ReaderObservable<R, B>) =>
-  chain(a => fromIOK(f)(a))
+  chain((a) => fromIOK(f)(a))
 
 /**
  * @category combinators
  * @since 0.6.6
  */
-export const fromObservableK = <A extends Array<unknown>, B>(
-  f: (...a: A) => Observable<B>
-): (<R>(...a: A) => ReaderObservable<R, B>) => (...a) => fromObservable(f(...a))
+export const fromObservableK =
+  <A extends Array<unknown>, B>(f: (...a: A) => Observable<B>): (<R>(...a: A) => ReaderObservable<R, B>) =>
+  (...a) =>
+    fromObservable(f(...a))
 
 /**
  * @category combinators
@@ -130,7 +134,7 @@ export const fromObservableK = <A extends Array<unknown>, B>(
  */
 export const chainTaskK = <A, B>(
   f: (a: A) => Observable<B>
-): (<R>(ma: ReaderObservable<R, A>) => ReaderObservable<R, B>) => chain(a => fromObservableK(f)(a))
+): (<R>(ma: ReaderObservable<R, A>) => ReaderObservable<R, B>) => chain((a) => fromObservableK(f)(a))
 
 // -------------------------------------------------------------------------------------
 // type class members
@@ -143,7 +147,7 @@ export const chainTaskK = <A, B>(
  * @category Functor
  * @since 0.6.6
  */
-export const map: <A, B>(f: (a: A) => B) => <R>(fa: ReaderObservable<R, A>) => ReaderObservable<R, B> = f => fa =>
+export const map: <A, B>(f: (a: A) => B) => <R>(fa: ReaderObservable<R, A>) => ReaderObservable<R, B> = (f) => (fa) =>
   flow(fa, T.map(f))
 
 /**
@@ -154,7 +158,8 @@ export const map: <A, B>(f: (a: A) => B) => <R>(fa: ReaderObservable<R, A>) => R
  */
 export const ap: <R, A>(
   fa: ReaderObservable<R, A>
-) => <B>(fab: ReaderObservable<R, (a: A) => B>) => ReaderObservable<R, B> = fa => fab => r => pipe(fab(r), T.ap(fa(r)))
+) => <B>(fab: ReaderObservable<R, (a: A) => B>) => ReaderObservable<R, B> = (fa) => (fab) => (r) =>
+  pipe(fab(r), T.ap(fa(r)))
 
 /**
  * Combine two effectful actions, keeping only the result of the first.
@@ -166,9 +171,9 @@ export const ap: <R, A>(
  */
 export const apFirst: <R, B>(
   fb: ReaderObservable<R, B>
-) => <A>(fa: ReaderObservable<R, A>) => ReaderObservable<R, A> = fb =>
+) => <A>(fa: ReaderObservable<R, A>) => ReaderObservable<R, A> = (fb) =>
   flow(
-    map(a => () => a),
+    map((a) => () => a),
     ap(fb)
   )
 
@@ -192,7 +197,7 @@ export const apSecond = <R, B>(
  * @category Applicative
  * @since 0.6.6
  */
-export const of: <R, A>(a: A) => ReaderObservable<R, A> = a => () => T.of(a)
+export const of: <R, A>(a: A) => ReaderObservable<R, A> = (a) => () => T.of(a)
 
 /**
  * Less strict version of [`chain`](#chain).
@@ -200,13 +205,14 @@ export const of: <R, A>(a: A) => ReaderObservable<R, A> = a => () => T.of(a)
  * @category Monad
  * @since 0.6.12
  */
-export const chainW = <A, R2, B>(f: (a: A) => ReaderObservable<R2, B>) => <R1>(
-  ma: ReaderObservable<R1, A>
-): ReaderObservable<R1 & R2, B> => r =>
-  pipe(
-    ma(r),
-    T.chain(a => f(a)(r))
-  )
+export const chainW =
+  <A, R2, B>(f: (a: A) => ReaderObservable<R2, B>) =>
+  <R1>(ma: ReaderObservable<R1, A>): ReaderObservable<R1 & R2, B> =>
+  (r) =>
+    pipe(
+      ma(r),
+      T.chain((a) => f(a)(r))
+    )
 
 /**
  * @category Monad
@@ -237,8 +243,8 @@ export const flatten: <R, A>(mma: ReaderObservable<R, ReaderObservable<R, A>>) =
  */
 export const chainFirst: <R, A, B>(
   f: (a: A) => ReaderObservable<R, B>
-) => (ma: ReaderObservable<R, A>) => ReaderObservable<R, A> = f =>
-  chain(a =>
+) => (ma: ReaderObservable<R, A>) => ReaderObservable<R, A> = (f) =>
+  chain((a) =>
     pipe(
       f(a),
       map(() => a)
@@ -254,7 +260,7 @@ export const chainFirst: <R, A, B>(
  */
 export const alt: <R, A>(
   that: () => ReaderObservable<R, A>
-) => (fa: ReaderObservable<R, A>) => ReaderObservable<R, A> = that => me => r =>
+) => (fa: ReaderObservable<R, A>) => ReaderObservable<R, A> = (that) => (me) => (r) =>
   pipe(
     me(r),
     T.alt(() => that()(r))
@@ -269,9 +275,9 @@ export const zero: Alternative2<URI>['zero'] = () => T.Alternative.zero
  * @category Filterable
  * @since 0.6.7
  */
-export const filterMap: <A, B>(
-  f: (a: A) => O.Option<B>
-) => <R>(fa: ReaderObservable<R, A>) => ReaderObservable<R, B> = f => fa => r => pipe(fa(r), T.filterMap(f))
+export const filterMap: <A, B>(f: (a: A) => O.Option<B>) => <R>(fa: ReaderObservable<R, A>) => ReaderObservable<R, B> =
+  (f) => (fa) => (r) =>
+    pipe(fa(r), T.filterMap(f))
 
 /**
  * @category Compactable
@@ -287,14 +293,14 @@ export const compact: <R, A>(fa: ReaderObservable<R, O.Option<A>>) => ReaderObse
  */
 export const partitionMap: <A, B, C>(
   f: (a: A) => E.Either<B, C>
-) => <R>(fa: ReaderObservable<R, A>) => Separated<ReaderObservable<R, B>, ReaderObservable<R, C>> = f => fa => ({
+) => <R>(fa: ReaderObservable<R, A>) => Separated<ReaderObservable<R, B>, ReaderObservable<R, C>> = (f) => (fa) => ({
   left: pipe(
     fa,
-    filterMap(a => O.fromEither(E.swap(f(a))))
+    filterMap((a) => O.fromEither(E.swap(f(a))))
   ),
   right: pipe(
     fa,
-    filterMap(a => O.fromEither(f(a)))
+    filterMap((a) => O.fromEither(f(a)))
   )
 })
 
@@ -551,7 +557,7 @@ export const Do: ReaderObservable<unknown, {}> =
 export const bindTo = <K extends string, R, A>(
   name: K
 ): ((fa: ReaderObservable<R, A>) => ReaderObservable<R, { [P in K]: A }>) =>
-  map(a => ({ [name]: a } as { [P in K]: A }))
+  map((a) => ({ [name]: a } as { [P in K]: A }))
 
 /**
  * @since 0.6.11
@@ -560,10 +566,10 @@ export const bind = <K extends string, R, A, B>(
   name: Exclude<K, keyof A>,
   f: (a: A) => ReaderObservable<R, B>
 ): ((fa: ReaderObservable<R, A>) => ReaderObservable<R, { [P in keyof A | K]: P extends keyof A ? A[P] : B }>) =>
-  chain(a =>
+  chain((a) =>
     pipe(
       f(a),
-      map(b => ({ ...a, [name]: b } as any))
+      map((b) => ({ ...a, [name]: b } as any))
     )
   )
 
@@ -585,10 +591,15 @@ export const run = <R, A>(ma: ReaderObservable<R, A>, r: R): Promise<A> => T.toT
 /**
  * @since 0.6.6
  */
-export const toReaderTask = <R, A>(ma: ReaderObservable<R, A>): ReaderTask<R, A> => r => T.toTask(ma(r))
+export const toReaderTask =
+  <R, A>(ma: ReaderObservable<R, A>): ReaderTask<R, A> =>
+  (r) =>
+    T.toTask(ma(r))
 
 /**
  * @since 0.6.15
  */
-export const toReaderTaskOption = <R, A>(ma: ReaderObservable<R, A>): ReaderTask<R, O.Option<A>> => r =>
-  T.toTaskOption(ma(r))
+export const toReaderTaskOption =
+  <R, A>(ma: ReaderObservable<R, A>): ReaderTask<R, O.Option<A>> =>
+  (r) =>
+    T.toTaskOption(ma(r))

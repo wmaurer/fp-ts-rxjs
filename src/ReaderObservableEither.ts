@@ -5,14 +5,15 @@ import { Applicative3 } from 'fp-ts/lib/Applicative'
 import { Apply3 } from 'fp-ts/lib/Apply'
 import { Bifunctor3 } from 'fp-ts/lib/Bifunctor'
 import { Either } from 'fp-ts/lib/Either'
-import { flow, identity, Predicate, Refinement } from 'fp-ts/lib/function'
+import { flow, identity, pipe } from 'fp-ts/lib/function'
 import { Functor3 } from 'fp-ts/lib/Functor'
 import { Monad3 } from 'fp-ts/lib/Monad'
 import { MonadIO3 } from 'fp-ts/lib/MonadIO'
 import { MonadTask3 } from 'fp-ts/lib/MonadTask'
 import { MonadThrow3 } from 'fp-ts/lib/MonadThrow'
-import { Option } from 'fp-ts/lib/Option'
-import { pipe } from 'fp-ts/lib/pipeable'
+import * as O from 'fp-ts/lib/Option'
+import { Predicate } from 'fp-ts/Predicate'
+import { Refinement } from 'fp-ts/Refinement'
 import * as R from 'fp-ts/lib/Reader'
 import { MonadObservable3 } from './MonadObservable'
 import * as OE from './ObservableEither'
@@ -65,31 +66,31 @@ export const ask: <R, E>() => ReaderObservableEither<R, E, R> = () => OE.right
  * @category constructors
  * @since 0.6.10
  */
-export const asks: <R, E, A>(f: (r: R) => A) => ReaderObservableEither<R, E, A> = f => flow(OE.right, OE.map(f))
+export const asks: <R, E, A>(f: (r: R) => A) => ReaderObservableEither<R, E, A> = (f) => flow(OE.right, OE.map(f))
 
 /**
  * @category constructors
  * @since 0.6.10
  */
-export const fromReader: <R, E, A>(ma: R.Reader<R, A>) => ReaderObservableEither<R, E, A> = ma => flow(ma, OE.right)
+export const fromReader: <R, E, A>(ma: R.Reader<R, A>) => ReaderObservableEither<R, E, A> = (ma) => flow(ma, OE.right)
 
 /**
  * @category constructors
  * @since 0.6.10
  */
-export const fromIO: MonadIO3<URI>['fromIO'] = ma => () => OE.rightIO(ma)
+export const fromIO: MonadIO3<URI>['fromIO'] = (ma) => () => OE.rightIO(ma)
 
 /**
  * @category constructors
  * @since 0.6.10
  */
-export const fromTask: MonadTask3<URI>['fromTask'] = ma => () => OE.fromTask(ma)
+export const fromTask: MonadTask3<URI>['fromTask'] = (ma) => () => OE.fromTask(ma)
 
 /**
  * @category constructors
  * @since 0.6.10
  */
-export const fromObservable: MonadObservable3<URI>['fromObservable'] = ma => () => OE.rightObservable(ma)
+export const fromObservable: MonadObservable3<URI>['fromObservable'] = (ma) => () => OE.rightObservable(ma)
 
 // -------------------------------------------------------------------------------------
 // combinators
@@ -111,7 +112,7 @@ export const local: <R2, R1>(
  * @category MonadThrow
  * @since 0.6.10
  */
-export const throwError: MonadThrow3<URI>['throwError'] = e => () => OE.left(e)
+export const throwError: MonadThrow3<URI>['throwError'] = (e) => () => OE.left(e)
 
 /**
  * `map` can be used to turn functions `(a: A) => B` into functions `(fa: F<A>) => F<B>` whose argument and return types
@@ -122,7 +123,7 @@ export const throwError: MonadThrow3<URI>['throwError'] = e => () => OE.left(e)
  */
 export const map: <A, B>(
   f: (a: A) => B
-) => <R, E>(fa: ReaderObservableEither<R, E, A>) => ReaderObservableEither<R, E, B> = f => fa => flow(fa, OE.map(f))
+) => <R, E>(fa: ReaderObservableEither<R, E, A>) => ReaderObservableEither<R, E, B> = (f) => (fa) => flow(fa, OE.map(f))
 
 /**
  * Apply a function to an argument under a type constructor.
@@ -132,7 +133,7 @@ export const map: <A, B>(
  */
 export const ap: <R, E, A>(
   fa: ReaderObservableEither<R, E, A>
-) => <B>(fab: ReaderObservableEither<R, E, (a: A) => B>) => ReaderObservableEither<R, E, B> = fa => fab => r =>
+) => <B>(fab: ReaderObservableEither<R, E, (a: A) => B>) => ReaderObservableEither<R, E, B> = (fa) => (fab) => (r) =>
   pipe(fab(r), OE.ap(fa(r)))
 
 /**
@@ -145,9 +146,9 @@ export const ap: <R, E, A>(
  */
 export const apFirst: <R, E, B>(
   fb: ReaderObservableEither<R, E, B>
-) => <A>(fa: ReaderObservableEither<R, E, A>) => ReaderObservableEither<R, E, A> = fb =>
+) => <A>(fa: ReaderObservableEither<R, E, A>) => ReaderObservableEither<R, E, A> = (fb) =>
   flow(
-    map(a => () => a),
+    map((a) => () => a),
     ap(fb)
   )
 
@@ -180,7 +181,7 @@ export const of: Applicative3<URI>['of'] = right
 export const bimap: <E, G, A, B>(
   f: (e: E) => G,
   g: (a: A) => B
-) => <R>(fa: ReaderObservableEither<R, E, A>) => ReaderObservableEither<R, G, B> = (f, g) => fea => r =>
+) => <R>(fa: ReaderObservableEither<R, E, A>) => ReaderObservableEither<R, G, B> = (f, g) => (fea) => (r) =>
   OE.bimap(f, g)(fea(r))
 
 /**
@@ -189,7 +190,7 @@ export const bimap: <E, G, A, B>(
  */
 export const mapLeft: <E, G>(
   f: (e: E) => G
-) => <R, A>(fa: ReaderObservableEither<R, E, A>) => ReaderObservableEither<R, G, A> = f => fea => r =>
+) => <R, A>(fa: ReaderObservableEither<R, E, A>) => ReaderObservableEither<R, G, A> = (f) => (fea) => (r) =>
   OE.mapLeft(f)(fea(r))
 
 /**
@@ -198,13 +199,14 @@ export const mapLeft: <E, G>(
  * @category Monad
  * @since 0.6.12
  */
-export const chainW = <A, R2, E2, B>(f: (a: A) => ReaderObservableEither<R2, E2, B>) => <R1, E1>(
-  ma: ReaderObservableEither<R1, E1, A>
-): ReaderObservableEither<R1 & R2, E1 | E2, B> => r =>
-  pipe(
-    ma(r),
-    OE.chainW(a => f(a)(r))
-  )
+export const chainW =
+  <A, R2, E2, B>(f: (a: A) => ReaderObservableEither<R2, E2, B>) =>
+  <R1, E1>(ma: ReaderObservableEither<R1, E1, A>): ReaderObservableEither<R1 & R2, E1 | E2, B> =>
+  (r) =>
+    pipe(
+      ma(r),
+      OE.chainW((a) => f(a)(r))
+    )
 
 /**
  * @category Monad
@@ -237,8 +239,8 @@ export const flatten: <R, E, A>(
  */
 export const chainFirst: <R, E, A, B>(
   f: (a: A) => ReaderObservableEither<R, E, B>
-) => (ma: ReaderObservableEither<R, E, A>) => ReaderObservableEither<R, E, A> = f =>
-  chain(a =>
+) => (ma: ReaderObservableEither<R, E, A>) => ReaderObservableEither<R, E, A> = (f) =>
+  chain((a) =>
     pipe(
       f(a),
       map(() => a)
@@ -261,14 +263,14 @@ export const filterOrElse: {
   predicate: Predicate<A>,
   onFalse: (a: A) => E
 ): (<R>(ma: ReaderObservableEither<R, E, A>) => ReaderObservableEither<R, E, A>) =>
-  chain(a => (predicate(a) ? of(a) : throwError(onFalse(a))))
+  chain((a) => (predicate(a) ? of(a) : throwError(onFalse(a))))
 
 /**
  * Derivable from `MonadThrow`.
  *
  * @since 0.6.10
  */
-export const fromEither: <R, E, A>(ma: Either<E, A>) => ReaderObservableEither<R, E, A> = ma =>
+export const fromEither: <R, E, A>(ma: Either<E, A>) => ReaderObservableEither<R, E, A> = (ma) =>
   ma._tag === 'Left' ? throwError(ma.left) : of(ma.right)
 
 /**
@@ -276,8 +278,10 @@ export const fromEither: <R, E, A>(ma: Either<E, A>) => ReaderObservableEither<R
  *
  * @since 0.6.10
  */
-export const fromOption = <E>(onNone: () => E) => <R, A>(ma: Option<A>): ReaderObservableEither<R, E, A> =>
-  ma._tag === 'None' ? throwError(onNone()) : of(ma.value)
+export const fromOption =
+  <E>(onNone: () => E) =>
+  <R, A>(ma: O.Option<A>): ReaderObservableEither<R, E, A> =>
+    ma._tag === 'None' ? throwError(onNone()) : of(ma.value)
 
 /**
  * Derivable from `MonadThrow`.
@@ -287,8 +291,10 @@ export const fromOption = <E>(onNone: () => E) => <R, A>(ma: Option<A>): ReaderO
 export const fromPredicate: {
   <E, A, B extends A>(refinement: Refinement<A, B>, onFalse: (a: A) => E): <R>(a: A) => ReaderObservableEither<R, E, B>
   <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E): <R>(a: A) => ReaderObservableEither<R, E, A>
-} = <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E) => <R>(a: A): ReaderObservableEither<R, E, A> =>
-  predicate(a) ? of(a) : throwError(onFalse(a))
+} =
+  <E, A>(predicate: Predicate<A>, onFalse: (a: A) => E) =>
+  <R>(a: A): ReaderObservableEither<R, E, A> =>
+    predicate(a) ? of(a) : throwError(onFalse(a))
 
 // -------------------------------------------------------------------------------------
 // instances
@@ -466,7 +472,7 @@ export const Do: ReaderObservableEither<unknown, never, {}> =
 export const bindTo = <K extends string, R, E, A>(
   name: K
 ): ((fa: ReaderObservableEither<R, E, A>) => ReaderObservableEither<R, E, { [P in K]: A }>) =>
-  map(a => ({ [name]: a } as { [P in K]: A }))
+  map((a) => ({ [name]: a } as { [P in K]: A }))
 
 /**
  * @since 0.6.11
@@ -477,10 +483,10 @@ export const bind = <K extends string, R, E, A, B>(
 ): ((
   fa: ReaderObservableEither<R, E, A>
 ) => ReaderObservableEither<R, E, { [P in keyof A | K]: P extends keyof A ? A[P] : B }>) =>
-  chain(a =>
+  chain((a) =>
     pipe(
       f(a),
-      map(b => ({ ...a, [name]: b } as any))
+      map((b) => ({ ...a, [name]: b } as any))
     )
   )
 

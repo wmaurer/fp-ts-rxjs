@@ -1,23 +1,25 @@
 /**
  * @since 0.6.0
  */
-import { Alt1 } from 'fp-ts/lib/Alt'
-import { Alternative1 } from 'fp-ts/lib/Alternative'
-import { Applicative1 } from 'fp-ts/lib/Applicative'
-import { Apply1 } from 'fp-ts/lib/Apply'
-import { Compactable1, Separated } from 'fp-ts/lib/Compactable'
-import * as E from 'fp-ts/lib/Either'
-import { Filterable1 } from 'fp-ts/lib/Filterable'
-import { flow, identity, Predicate, Refinement } from 'fp-ts/lib/function'
-import { Functor1 } from 'fp-ts/lib/Functor'
-import { Monad1 } from 'fp-ts/lib/Monad'
-import { MonadIO1 } from 'fp-ts/lib/MonadIO'
-import { MonadTask1 } from 'fp-ts/lib/MonadTask'
-import { Monoid } from 'fp-ts/lib/Monoid'
-import * as O from 'fp-ts/lib/Option'
-import { pipe } from 'fp-ts/lib/pipeable'
-import { Task } from 'fp-ts/lib/Task'
-import { combineLatest, defer, EMPTY, merge, Observable, of as rxOf } from 'rxjs'
+import { Alt1 } from 'fp-ts/Alt'
+import { Alternative1 } from 'fp-ts/Alternative'
+import { Applicative1 } from 'fp-ts/Applicative'
+import { Apply1 } from 'fp-ts/Apply'
+import { Compactable1 } from 'fp-ts/Compactable'
+import * as E from 'fp-ts/Either'
+import { Filterable1 } from 'fp-ts/Filterable'
+import { flow, identity, pipe } from 'fp-ts/function'
+import { Functor1 } from 'fp-ts/Functor'
+import { Monad1 } from 'fp-ts/Monad'
+import { MonadIO1 } from 'fp-ts/MonadIO'
+import { MonadTask1 } from 'fp-ts/MonadTask'
+import { Monoid } from 'fp-ts/Monoid'
+import * as O from 'fp-ts/Option'
+import { Predicate } from 'fp-ts/Predicate'
+import { Refinement } from 'fp-ts/Refinement'
+import { Task } from 'fp-ts/Task'
+import { Separated } from 'fp-ts/Separated'
+import { combineLatest, defer, EMPTY, lastValueFrom, merge, Observable, of as rxOf } from 'rxjs'
 import { map as rxMap, mergeMap, startWith } from 'rxjs/operators'
 import { MonadObservable1 } from './MonadObservable'
 
@@ -35,7 +37,7 @@ export const fromOption = <A>(o: O.Option<A>): Observable<A> => (O.isNone(o) ? E
  * @category constructors
  * @since 0.6.5
  */
-export const fromIO: MonadIO1<URI>['fromIO'] = ma => defer(() => rxOf(ma()))
+export const fromIO: MonadIO1<URI>['fromIO'] = (ma) => defer(() => rxOf(ma()))
 
 /**
  * @category constructors
@@ -54,7 +56,7 @@ export const fromTask: MonadTask1<URI>['fromTask'] = defer
  * @category Functor
  * @since 0.6.0
  */
-export const map: <A, B>(f: (a: A) => B) => (fa: Observable<A>) => Observable<B> = f => fa => fa.pipe(rxMap(f))
+export const map: <A, B>(f: (a: A) => B) => (fa: Observable<A>) => Observable<B> = (f) => (fa) => fa.pipe(rxMap(f))
 
 /**
  * Apply a function to an argument under a type constructor.
@@ -62,7 +64,7 @@ export const map: <A, B>(f: (a: A) => B) => (fa: Observable<A>) => Observable<B>
  * @category Apply
  * @since 0.6.0
  */
-export const ap: <A>(fa: Observable<A>) => <B>(fab: Observable<(a: A) => B>) => Observable<B> = fa => fab =>
+export const ap: <A>(fa: Observable<A>) => <B>(fab: Observable<(a: A) => B>) => Observable<B> = (fa) => (fab) =>
   combineLatest([fab, fa]).pipe(rxMap(([f, a]) => f(a)))
 
 /**
@@ -73,9 +75,9 @@ export const ap: <A>(fa: Observable<A>) => <B>(fab: Observable<(a: A) => B>) => 
  * @category combinators
  * @since 0.6.0
  */
-export const apFirst: <B>(fb: Observable<B>) => <A>(fa: Observable<A>) => Observable<A> = fb =>
+export const apFirst: <B>(fb: Observable<B>) => <A>(fa: Observable<A>) => Observable<A> = (fb) =>
   flow(
-    map(a => () => a),
+    map((a) => () => a),
     ap(fb)
   )
 
@@ -106,7 +108,7 @@ export const of: Applicative1<URI>['of'] = rxOf
  * @category Monad
  * @since 0.6.0
  */
-export const chain: <A, B>(f: (a: A) => Observable<B>) => (ma: Observable<A>) => Observable<B> = f => ma =>
+export const chain: <A, B>(f: (a: A) => Observable<B>) => (ma: Observable<A>) => Observable<B> = (f) => (ma) =>
   ma.pipe(mergeMap(f))
 
 /**
@@ -128,8 +130,8 @@ export const flatten: <A>(mma: Observable<Observable<A>>) => Observable<A> =
  * @category combinators
  * @since 0.6.0
  */
-export const chainFirst: <A, B>(f: (a: A) => Observable<B>) => (ma: Observable<A>) => Observable<A> = f =>
-  chain(a =>
+export const chainFirst: <A, B>(f: (a: A) => Observable<B>) => (ma: Observable<A>) => Observable<A> = (f) =>
+  chain((a) =>
     pipe(
       f(a),
       map(() => a)
@@ -143,23 +145,25 @@ export const chainFirst: <A, B>(f: (a: A) => Observable<B>) => (ma: Observable<A
  * @category Alt
  * @since 0.6.0
  */
-export const alt: <A>(that: () => Observable<A>) => (fa: Observable<A>) => Observable<A> = that => fa =>
+export const alt: <A>(that: () => Observable<A>) => (fa: Observable<A>) => Observable<A> = (that) => (fa) =>
   merge(fa, that())
 
 /**
  * @category Filterable
  * @since 0.6.0
  */
-export const filterMap = <A, B>(f: (a: A) => O.Option<B>) => (fa: Observable<A>): Observable<B> =>
-  fa.pipe(
-    mergeMap(a =>
-      pipe(
-        f(a),
-        // tslint:disable-next-line: deprecation
-        O.fold<B, Observable<B>>(() => EMPTY, of)
+export const filterMap =
+  <A, B>(f: (a: A) => O.Option<B>) =>
+  (fa: Observable<A>): Observable<B> =>
+    fa.pipe(
+      mergeMap((a) =>
+        pipe(
+          f(a),
+          // tslint:disable-next-line: deprecation
+          O.fold<B, Observable<B>>(() => EMPTY, of)
+        )
       )
     )
-  )
 
 /**
  * @category Compactable
@@ -175,14 +179,14 @@ export const compact: <A>(fa: Observable<O.Option<A>>) => Observable<A> =
  */
 export const partitionMap: <A, B, C>(
   f: (a: A) => E.Either<B, C>
-) => (fa: Observable<A>) => Separated<Observable<B>, Observable<C>> = f => fa => ({
+) => (fa: Observable<A>) => Separated<Observable<B>, Observable<C>> = (f) => (fa) => ({
   left: pipe(
     fa,
-    filterMap(a => O.fromEither(E.swap(f(a))))
+    filterMap((a) => O.fromEither(E.swap(f(a))))
   ),
   right: pipe(
     fa,
-    filterMap(a => O.fromEither(f(a)))
+    filterMap((a) => O.fromEither(f(a)))
   )
 })
 
@@ -201,7 +205,10 @@ export const separate: <A, B>(fa: Observable<E.Either<A, B>>) => Separated<Obser
 export const filter: {
   <A, B extends A>(refinement: Refinement<A, B>): (fa: Observable<A>) => Observable<B>
   <A>(predicate: Predicate<A>): (fa: Observable<A>) => Observable<A>
-} = <A>(p: Predicate<A>) => (fa: Observable<A>) => pipe(fa, filterMap(O.fromPredicate(p)))
+} =
+  <A>(p: Predicate<A>) =>
+  (fa: Observable<A>) =>
+    pipe(fa, filterMap(O.fromPredicate(p)))
 
 /**
  * @category Filterable
@@ -210,7 +217,10 @@ export const filter: {
 export const partition: {
   <A, B extends A>(refinement: Refinement<A, B>): (fa: Observable<A>) => Separated<Observable<A>, Observable<B>>
   <A>(predicate: Predicate<A>): (fa: Observable<A>) => Separated<Observable<A>, Observable<A>>
-} = <A>(p: Predicate<A>) => (fa: Observable<A>) => pipe(fa, partitionMap(E.fromPredicate(p, identity)))
+} =
+  <A>(p: Predicate<A>) =>
+  (fa: Observable<A>) =>
+    pipe(fa, partitionMap(E.fromPredicate(p, identity)))
 
 /**
  * @category Alternative
@@ -436,7 +446,7 @@ export const Do: Observable<{}> =
  * @since 0.6.11
  */
 export const bindTo = <K extends string, A>(name: K): ((fa: Observable<A>) => Observable<{ [P in K]: A }>) =>
-  map(a => ({ [name]: a } as { [P in K]: A }))
+  map((a) => ({ [name]: a } as { [P in K]: A }))
 
 /**
  * @since 0.6.11
@@ -445,37 +455,41 @@ export const bind = <K extends string, A, B>(
   name: Exclude<K, keyof A>,
   f: (a: A) => Observable<B>
 ): ((fa: Observable<A>) => Observable<{ [P in keyof A | K]: P extends keyof A ? A[P] : B }>) =>
-  chain(a =>
+  chain((a) =>
     pipe(
       f(a),
-      map(b => ({ ...a, [name]: b } as any))
+      map((b) => ({ ...a, [name]: b } as any))
     )
   )
 
 /**
  * @since 0.6.5
  */
-export const toTask = <A>(o: Observable<A>): Task<A> => () =>
-  new Promise<A>((resolve, reject) => {
-    let hasResult = false
-    let result: A
-    o.subscribe({
-      next: value => {
-        result = value
-        hasResult = true
-      },
-      error: reject,
-      complete: () => {
-        /* istanbul ignore next */
-        if (hasResult) {
-          resolve(result)
+export const toTask =
+  <A>(o: Observable<A>): Task<A> =>
+  () =>
+    new Promise<A>((resolve, reject) => {
+      let hasResult = false
+      let result: A
+      o.subscribe({
+        next: (value) => {
+          result = value
+          hasResult = true
+        },
+        error: reject,
+        complete: () => {
+          /* istanbul ignore next */
+          if (hasResult) {
+            resolve(result)
+          }
         }
-      }
+      })
     })
-  })
 
 /**
  * @since 0.6.15
  */
-export const toTaskOption = <A>(o: Observable<A>): Task<O.Option<A>> => () =>
-  pipe(o, map(O.some), startWith(O.none)).toPromise()
+export const toTaskOption =
+  <A>(o: Observable<A>): Task<O.Option<A>> =>
+  () =>
+    lastValueFrom(pipe(o, map(O.some), startWith(O.none)))

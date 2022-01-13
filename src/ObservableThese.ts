@@ -1,20 +1,19 @@
 /**
  * @since 0.6.12
  */
-import { Applicative2, Applicative2C } from 'fp-ts/lib/Applicative'
-import { Apply1 } from 'fp-ts/lib/Apply'
-import { Bifunctor2 } from 'fp-ts/lib/Bifunctor'
-import { flow } from 'fp-ts/lib/function'
-import { Functor2 } from 'fp-ts/lib/Functor'
-import { IO } from 'fp-ts/lib/IO'
-import { IOEither } from 'fp-ts/lib/IOEither'
-import { Monad2C } from 'fp-ts/lib/Monad'
-import { MonadIO2 } from 'fp-ts/lib/MonadIO'
-import { MonadTask2 } from 'fp-ts/lib/MonadTask'
-import { pipe } from 'fp-ts/lib/pipeable'
-import { Semigroup } from 'fp-ts/lib/Semigroup'
-import * as TT from 'fp-ts/lib/TaskThese'
-import * as TH from 'fp-ts/lib/These'
+import { Applicative2, Applicative2C } from 'fp-ts/Applicative'
+import { Apply1 } from 'fp-ts/Apply'
+import { Bifunctor2 } from 'fp-ts/Bifunctor'
+import { flow, pipe } from 'fp-ts/function'
+import { Functor2 } from 'fp-ts/Functor'
+import { IO } from 'fp-ts/IO'
+import { IOEither } from 'fp-ts/IOEither'
+import { Monad2C } from 'fp-ts/Monad'
+import { MonadIO2 } from 'fp-ts/MonadIO'
+import { MonadTask2 } from 'fp-ts/MonadTask'
+import { Semigroup } from 'fp-ts/Semigroup'
+import * as TT from 'fp-ts/TaskThese'
+import * as TH from 'fp-ts/These'
 import { Observable } from 'rxjs'
 import * as R from './Observable'
 
@@ -153,7 +152,7 @@ export const swap: <E, A>(ma: ObservableThese<E, A>) => ObservableThese<A, E> =
  * @category Functor
  * @since 0.6.12
  */
-export const map: <A, B>(f: (a: A) => B) => <E>(fa: ObservableThese<E, A>) => ObservableThese<E, B> = f =>
+export const map: <A, B>(f: (a: A) => B) => <E>(fa: ObservableThese<E, A>) => ObservableThese<E, B> = (f) =>
   R.map(TH.map(f))
 
 /**
@@ -169,7 +168,7 @@ export const bimap: <E, G, A, B>(
  * @category Bifunctor
  * @since 0.6.12
  */
-export const mapLeft: <E, G>(f: (e: E) => G) => <A>(fa: ObservableThese<E, A>) => ObservableThese<G, A> = f =>
+export const mapLeft: <E, G>(f: (e: E) => G) => <A>(fa: ObservableThese<E, A>) => ObservableThese<G, A> = (f) =>
   R.map(TH.mapLeft(f))
 
 /**
@@ -211,13 +210,13 @@ declare module 'fp-ts/lib/HKT' {
  */
 export const getApplicative = <E>(A: Apply1<R.URI>, S: Semigroup<E>): Applicative2C<URI, E> => {
   const AV = TH.getMonad(S)
-  const ap = <A>(fga: Observable<TH.These<E, A>>) => <B>(
-    fgab: Observable<TH.These<E, (a: A) => B>>
-  ): Observable<TH.These<E, B>> =>
-    A.ap(
-      A.map(fgab, h => (ga: TH.These<E, A>) => AV.ap(h, ga)),
-      fga
-    )
+  const ap =
+    <A>(fga: Observable<TH.These<E, A>>) =>
+    <B>(fgab: Observable<TH.These<E, (a: A) => B>>): Observable<TH.These<E, B>> =>
+      A.ap(
+        A.map(fgab, (h) => (ga: TH.These<E, A>) => AV.ap(h, ga)),
+        fga
+      )
   return {
     URI,
     _E: undefined as any,
@@ -248,8 +247,8 @@ export const getMonad = <E>(S: Semigroup<E>): Monad2C<URI, E> => {
               f(a),
               R.map(
                 TH.fold(
-                  e2 => TH.left(S.concat(e1, e2)),
-                  b => TH.both(e1, b),
+                  (e2) => TH.left(S.concat(e1, e2)),
+                  (b) => TH.both(e1, b),
                   (e2, b) => TH.both(S.concat(e1, e2), b)
                 )
               )
